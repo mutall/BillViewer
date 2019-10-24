@@ -1,0 +1,49 @@
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_margin="10dp">
+
+    <androidx.cardview.widget.CardView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        app:cardBackgroundColor="@color/md_blue_grey_100"
+        app:cardCornerRadius="15dp"
+        app:cardElevation="5dp"
+        app:contentPaddingLeft="15dp"
+        app:contentPaddingRight="15dp">
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <TextView
+                android:id="@+id/number"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="177dp"
+                android:layout_marginTop="8dp"
+                android:layout_marginEnd="176dp"
+                android:text="Solo Mutall"
+                app:layout_constraintBottom_toTopOf="@+id/message"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <TextView
+                android:id="@+id/message"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="32dp"
+                android:layout_marginBottom="32dp"
+                android:text="Ex tempus, repellat, sunt etiam nesciunt necessitatibus saepe? Class magnam officiis, a! Iaculis venenatis quo, voluptas, tenetur fermentum? Metus eaque auctor tincidunt varius? Fugiat, ullam nibh? Vero molestie, eligendi voluptatibus."
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="@+id/number"
+                app:layout_constraintStart_toStartOf="@+id/number"
+                app:layout_constraintTop_toBottomOf="@+id/number"
+                app:layout_constraintVertical_chainStyle="spread" />
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+    </androidx.cardview.widget.CardView>
+</FrameLayout>
