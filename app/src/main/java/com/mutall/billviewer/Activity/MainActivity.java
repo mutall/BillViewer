@@ -28,6 +28,7 @@ import com.mutall.billviewer.Activity.ListFragment;
 import com.mutall.billviewer.Model.Sms;
 import com.mutall.billviewer.R;
 import com.mutall.billviewer.Util.Constants;
+import com.mutall.billviewer.Util.SmsThread;
 
 import org.json.JSONArray;
 
@@ -38,19 +39,20 @@ import java.util.List;
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
     private static final String TAG = "MainActivity";
     Toolbar toolbar;
-    Button request,inbox;
+    Button request, inbox;
     String[] dialog_items;
+
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if(requestCode == Constants.MY_PERMISSIONS_REQUEST_READ_SMS){
-            if (resultCode == RESULT_CANCELED){
+        if (requestCode == Constants.MY_PERMISSIONS_REQUEST_READ_SMS || requestCode == Constants.MY_PERMISSIONS_REQUEST_SEND_SMS) {
+            if (resultCode == RESULT_CANCELED) {
                 try {
                     showSnack("Cant use without sms permission");
                     wait(5000);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
-                }finally {
+                } finally {
                     this.finish();
                 }
 
@@ -80,29 +82,35 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     @Override
     public void onClick(View view) {
-        switch (view.getId()){
+        switch (view.getId()) {
             case R.id.request:
                 Log.d(TAG, "onClick: request clicked");
-            break;
+                SmsThread thread = new SmsThread();
+                thread.run();
+                break;
             case R.id.inbox:
-                Log.d(TAG, "onClick: inbox clicked");
-                final AlertDialog.Builder dialog = new AlertDialog.Builder(this);
-                dialog.setTitle(R.string.dialog_title);
-                dialog.setItems(R.array.dialog_items, new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialogInterface, int i) {
-                        String num = dialog_items[i];
-                        List array = getInboxMessages(num);
-                        Intent intent = new Intent(MainActivity.this, ListFragment.class);
-                        intent.putParcelableArrayListExtra(Constants.SMS_LIST, (ArrayList<? extends Parcelable>) array);
-                        intent.putExtra(Constants.BUTTON, "upload");
-                        startActivity(intent);
-                        Log.d(TAG, "onClick: "+array.toString());
-                    }
-                });
-                dialog.show();
-            break;
+                showInbox();
+                break;
         }
+    }
+
+    private void showInbox() {
+        Log.d(TAG, "onClick: inbox clicked");
+        final AlertDialog.Builder dialog = new AlertDialog.Builder(this);
+        dialog.setTitle(R.string.dialog_title);
+        dialog.setItems(R.array.dialog_items, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialogInterface, int i) {
+                String num = dialog_items[i];
+                List array = getInboxMessages(num);
+                Intent intent = new Intent(MainActivity.this, ListFragment.class);
+                intent.putParcelableArrayListExtra(Constants.SMS_LIST, (ArrayList<? extends Parcelable>) array);
+                intent.putExtra(Constants.BUTTON, "upload");
+                startActivity(intent);
+                Log.d(TAG, "onClick: " + array.toString());
+            }
+        });
+        dialog.show();
     }
 
     private List<Sms> getInboxMessages(String number) {
@@ -116,10 +124,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         //get selection arguments
         String[] selectionArgs = new String[]{"address", "body", "date"};
-        String whereClause = "\'"+number+"\'";
+        String whereClause = "\'" + number + "\'";
 
         //get the cursor using the uri and selection args
-        Cursor cursor = getContentResolver().query(uri, selectionArgs, "address="+whereClause, null, null);
+        Cursor cursor = getContentResolver().query(uri, selectionArgs, "address=" + whereClause, null, null);
         cursor.moveToFirst();
         try {
             do {
@@ -129,7 +137,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 array.add(sms);
 
             } while (cursor.moveToNext());
-        }catch (CursorIndexOutOfBoundsException e){
+        } catch (CursorIndexOutOfBoundsException e) {
             e.printStackTrace();
             showSnack("Number not found");
         }
@@ -145,10 +153,20 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 Manifest.permission.READ_SMS)
                 != PackageManager.PERMISSION_GRANTED) {
 
-                ActivityCompat.requestPermissions(this,
-                        new String[]{Manifest.permission.READ_SMS},
-                        Constants.MY_PERMISSIONS_REQUEST_READ_SMS);
-            }
-  
+            ActivityCompat.requestPermissions(this,
+                    new String[]{Manifest.permission.READ_SMS},
+                    Constants.MY_PERMISSIONS_REQUEST_READ_SMS);
+        }
+
+
+        if (ContextCompat.checkSelfPermission(this,
+                Manifest.permission.SEND_SMS)
+                != PackageManager.PERMISSION_GRANTED) {
+
+            ActivityCompat.requestPermissions(this,
+                    new String[]{Manifest.permission.SEND_SMS},
+                    Constants.MY_PERMISSIONS_REQUEST_SEND_SMS);
+        }
+
     }
 }
