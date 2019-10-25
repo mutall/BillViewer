@@ -1,3 +1,9 @@
 <resources>
     <string name="app_name">BillViewer</string>
+    <string name="dialog_title">choose number</string>
+    <string-array name="dialog_items">
+        <item>95551</item>
+        <item>KenyaPower</item>
+        <item>KENYAPOWER</item>
+    </string-array>
 </resources>
