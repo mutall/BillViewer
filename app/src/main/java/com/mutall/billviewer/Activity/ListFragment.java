@@ -5,10 +5,7 @@ import android.content.Context;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
-
-import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -18,11 +15,7 @@ import com.mutall.billviewer.Adapter.SmsAdapter;
 import com.mutall.billviewer.Model.Sms;
 import com.mutall.billviewer.R;
 import com.mutall.billviewer.Util.Constants;
-
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 public class ListFragment extends AppCompatActivity implements View.OnClickListener{
     private static final String TAG = "ListFragment";
