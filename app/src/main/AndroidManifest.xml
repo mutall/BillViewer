@@ -3,6 +3,7 @@
     xmlns:dist="http://schemas.android.com/apk/distribution"
     package="com.mutall.billviewer">
     <uses-permission android:name="android.permission.READ_SMS"/>
+    <uses-permission android:name="android.permission.SEND_SMS"/>
     <application
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
