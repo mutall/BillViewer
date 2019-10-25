@@ -23,7 +23,7 @@ public class SmsAdapter extends RecyclerView.Adapter<SmsAdapter.SmsViewHolder>{
     @NonNull
     @Override
     public SmsViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View itemView = LayoutInflater.from(parent.getContext()).inflate(R.layout.single_item, parent);
+        View itemView = LayoutInflater.from(parent.getContext()).inflate(R.layout.single_item, parent, false);
         return new SmsViewHolder(itemView);
     }
 
