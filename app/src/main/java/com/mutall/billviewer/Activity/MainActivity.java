@@ -1,16 +1,13 @@
 package com.mutall.billviewer.Activity;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
-import androidx.fragment.app.FragmentManager;
-import androidx.fragment.app.FragmentTransaction;
-
 import android.Manifest;
 import android.app.AlertDialog;
-import android.app.Dialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -18,29 +15,49 @@ import android.database.Cursor;
 import android.database.CursorIndexOutOfBoundsException;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
+import android.os.Message;
 import android.os.Parcelable;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.Toast;
 
+import com.android.volley.RequestQueue;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.JsonArrayRequest;
+import com.android.volley.toolbox.Volley;
 import com.google.android.material.snackbar.Snackbar;
-import com.mutall.billviewer.Activity.ListFragment;
-import com.mutall.billviewer.Model.Sms;
+import com.mutall.billviewer.Model.CardItem;
 import com.mutall.billviewer.R;
 import com.mutall.billviewer.Util.Constants;
 import com.mutall.billviewer.Util.SmsThread;
 
+
 import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
     private static final String TAG = "MainActivity";
     Toolbar toolbar;
     Button request, inbox;
-    String[] dialog_items;
+    String[] dialog_items, response_items;
+    JSONArray accounts;
+    Handler handler = new Handler(Looper.getMainLooper()){
+        @Override
+        public void handleMessage(@NonNull Message msg) {
+            if (msg.what ==  Constants.HANDLER){
+                Toast.makeText(MainActivity.this, "Message for account"+ msg.obj.toString() +" sent", Toast.LENGTH_SHORT).show();
+                Log.d(TAG, "handleMessage: "+msg.obj.toString());
+            }
+        }
+    };
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
@@ -77,7 +94,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         request.setOnClickListener(this);
         inbox.setOnClickListener(this);
         dialog_items = getResources().getStringArray(R.array.dialog_items);
-
+        response_items = getResources().getStringArray(R.array.response_items);
     }
 
     @Override
@@ -85,13 +102,86 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         switch (view.getId()) {
             case R.id.request:
                 Log.d(TAG, "onClick: request clicked");
-                SmsThread thread = new SmsThread();
-                thread.run();
+                fetchAccounts();
                 break;
             case R.id.inbox:
                 showInbox();
                 break;
         }
+    }
+
+    private void fetchAccounts() {
+        RequestQueue queue = Volley.newRequestQueue(this);
+
+        JsonArrayRequest accountsRequest = new JsonArrayRequest(Constants.REQUEST_ACCOUNTS, new Response.Listener<JSONArray>() {
+            @Override
+            public void onResponse(JSONArray response) {
+                Log.d(TAG, "onResponse: "+response);
+                accounts = response;
+                showResponseDialog();
+            }
+        }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                Log.e(TAG, "onErrorResponse: "+error.getMessage());
+            }
+        });
+
+        queue.add(accountsRequest);
+
+    }
+
+    private void showResponseDialog() {
+        final AlertDialog.Builder dialog = new AlertDialog.Builder(this);
+        dialog.setTitle(R.string.response_title);
+        dialog.setItems(R.array.response_items, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialogInterface, int i) {
+                if(response_items[i].equals("VIEW AS LIST")){
+                    //start intent and pass the response
+                    List<CardItem> list = convertJsonToCardItemList(accounts);
+                    Intent intent = new Intent(MainActivity.this, ListFragment.class);
+                    intent.putExtra(Constants.BUTTON, "send");
+                    intent.putParcelableArrayListExtra(Constants.SMS_LIST, (ArrayList<? extends Parcelable>) list);
+                    startActivity(intent);
+                }else {
+                    //just send the smses
+                    Log.d(TAG, "onClick: sed clicked");
+                    List<String> list = new ArrayList<>();
+                    List<CardItem> cardItems = convertJsonToCardItemList(accounts);
+
+                    for(CardItem item: cardItems){
+                        list.add(item.getBody());
+                    }
+                    SmsThread thread = new SmsThread(list, handler);
+                    thread.run();
+                    dialogInterface.dismiss();
+
+                }
+            }
+        });
+
+        dialog.show();
+    }
+
+
+    private List<CardItem> convertJsonToCardItemList(JSONArray array) {
+        List<CardItem> list = new ArrayList<>();
+        Log.d(TAG, "convertJsonToCardItemList: "+array);
+
+        for (int i = 0; i<array.length(); i++){
+            try {
+                JSONObject jsonObject = array.getJSONObject(i);
+                String name = jsonObject.getString("name");
+                String num = jsonObject.getString("num");
+                CardItem item = new CardItem(name, num);
+                list.add(item);
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+
+        }
+        return list;
     }
 
     private void showInbox() {
@@ -113,9 +203,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         dialog.show();
     }
 
-    private List<Sms> getInboxMessages(String number) {
+    private List<CardItem> getInboxMessages(String number) {
         Log.d(TAG, "getInboxMessages: start method");
-        List<Sms> array = new ArrayList<>();
+        List<CardItem> array = new ArrayList<>();
         //this is the query string passed to the URI
         final String inboxQueryString = "content://sms/inbox";
 
@@ -131,10 +221,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         cursor.moveToFirst();
         try {
             do {
-                String num = cursor.getString(cursor.getColumnIndex("address"));
+                String title = cursor.getString(cursor.getColumnIndex("address"));
                 String body = cursor.getString(cursor.getColumnIndex("body"));
-                Sms sms = new Sms(num, body);
-                array.add(sms);
+                CardItem item = new CardItem(title, body);
+                array.add(item);
 
             } while (cursor.moveToNext());
         } catch (CursorIndexOutOfBoundsException e) {

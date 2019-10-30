@@ -1,7 +1,6 @@
 package com.mutall.billviewer.Activity;
 
 
-import android.content.Context;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -11,15 +10,17 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.mutall.billviewer.Adapter.SmsAdapter;
-import com.mutall.billviewer.Model.Sms;
+import com.mutall.billviewer.Adapter.CardAdapter;
+import com.mutall.billviewer.Model.CardItem;
 import com.mutall.billviewer.R;
 import com.mutall.billviewer.Util.Constants;
+import com.mutall.billviewer.Util.SmsThread;
+
 import java.util.List;
 
 public class ListFragment extends AppCompatActivity implements View.OnClickListener{
     private static final String TAG = "ListFragment";
-    List<Sms> smsList;
+    List<CardItem> cardItemList;
     RecyclerView recyclerView;
     Button button;
     String button_name;
@@ -30,8 +31,8 @@ public class ListFragment extends AppCompatActivity implements View.OnClickListe
         button = findViewById(R.id.button);
 
         if(getIntent().hasExtra(Constants.SMS_LIST)){
-            smsList = getIntent().getParcelableArrayListExtra(Constants.SMS_LIST);
-            Log.d(TAG, "onCreate: "+smsList.toString());
+            cardItemList = getIntent().getParcelableArrayListExtra(Constants.SMS_LIST);
+            Log.d(TAG, "onCreate: "+cardItemList.toString());
         }
         button_name = getIntent().getStringExtra(Constants.BUTTON);
         button.setText(button_name);
@@ -40,7 +41,7 @@ public class ListFragment extends AppCompatActivity implements View.OnClickListe
         LinearLayoutManager manager = new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false);
         recyclerView.setLayoutManager(manager);
 
-        SmsAdapter adapter = new SmsAdapter(smsList);
+        CardAdapter adapter = new CardAdapter(cardItemList);
         recyclerView.setAdapter(adapter);
 
      }
@@ -54,6 +55,9 @@ public class ListFragment extends AppCompatActivity implements View.OnClickListe
                 break;
             case "send":
                 Log.d(TAG, "onClick: data sent");
+//                SmsThread thread = new SmsThread(list, handler);
+//                    thread.run();
+
                 break;
             default:
                 this.finish();
